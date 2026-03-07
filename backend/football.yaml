@@ -1,0 +1,29 @@
+# =============================================================================
+# football.yaml — YOLOv8 dataset configuration for football analytics
+# =============================================================================
+
+# ── Dataset root ──────────────────────────────────────────────────────────────
+# Path to the dataset directory, relative to this file's location.
+# Can also be an absolute path (e.g. /home/user/datasets/football).
+path: dataset
+
+# ── Split paths ───────────────────────────────────────────────────────────────
+# Paths to training and validation image folders, relative to `path`.
+# YOLOv8 will automatically look for labels in the corresponding
+# labels/ folder (e.g. dataset/labels/train/).
+train: images/train
+val:   images/val
+
+# ── Number of classes ─────────────────────────────────────────────────────────
+# Must match the total number of entries in `names` below.
+nc: 4
+
+# ── Class names ───────────────────────────────────────────────────────────────
+# Integer index → class label mapping.
+# The index here must match the class_id used in every .txt annotation file:
+#   <class_id> <x_center> <y_center> <width> <height>  (all normalised 0–1)
+names:
+  0: player
+  1: ball
+  2: goalkeeper
+  3: referee

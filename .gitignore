@@ -1,0 +1,62 @@
+# ── Secrets & credentials ─────────────────────────────────────────────────────
+.env
+*.env
+!*.env.example
+*.pem
+*.key
+*.secret
+*.credentials
+kaggle.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# ── YOLO / training artefacts ─────────────────────────────────────────────────
+runs/
+*.pt
+*.onnx
+*.engine
+*.torchscript
+
+# ── Dataset (large binary files) ──────────────────────────────────────────────
+backend/dataset/
+*.zip
+*.tar.gz
+
+# ── Generated output ─────────────────────────────────────────────────────────
+backend/heatmaps/
+backend/outputs/
+backend/test_data/
+backend/*.jpg
+backend/*.png
+backend/_raw_*/
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+frontend/build/
+frontend/src/index.css
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+*.log
+docker-compose.override.yml
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+.cursor/

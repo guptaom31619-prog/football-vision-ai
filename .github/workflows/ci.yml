@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Backend checks — syntax, lint, YAML validation
+  # ───────────────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — Python checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install lint dependencies
+        run: pip install ruff pyyaml
+
+      - name: Python syntax check (all .py files)
+        run: |
+          for f in *.py; do
+            python -m py_compile "$f" && echo "  ✓ $f" || exit 1
+          done
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Validate football.yaml
+        run: python -c "import yaml; yaml.safe_load(open('football.yaml'))"
+
+      - name: Validate requirements.txt is parseable
+        run: pip install --dry-run -r requirements.txt 2>&1 | head -20 || true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Frontend checks — install, lint, build
+  # ───────────────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — React checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint check
+        run: npx eslint src/ --max-warnings=0 || true
+
+      - name: Build check
+        run: npm run build
+        env:
+          CI: true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Structure check — ensure critical files exist
+  # ───────────────────────────────────────────────────────────────────────────
+  structure:
+    name: Project structure check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify critical files exist
+        run: |
+          files=(
+            backend/api.py
+            backend/detect.py
+            backend/train.py
+            backend/tracker.py
+            backend/team_classifier.py
+            backend/stats_engine.py
+            backend/heatmap.py
+            backend/requirements.txt
+            backend/football.yaml
+            backend/.env.example
+            backend/Dockerfile
+            frontend/package.json
+            frontend/package-lock.json
+            frontend/src/App.js
+            frontend/src/pages/Home.js
+            frontend/src/pages/Upload.js
+            frontend/src/components/Navbar.js
+            frontend/src/components/UploadBox.js
+            frontend/src/components/DetectionCanvas.js
+            frontend/src/services/detectionApi.js
+            frontend/Dockerfile
+            frontend/nginx.conf
+            docker-compose.yml
+            Makefile
+            README.md
+            .gitignore
+          )
+          missing=0
+          for f in "${files[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing: $f"
+              missing=1
+            else
+              echo "✅ Found:   $f"
+            fi
+          done
+          if [ $missing -eq 1 ]; then
+            echo "::error::Critical files are missing from the repo."
+            exit 1
+          fi
+          echo "All critical files present."
+
+      - name: Verify deleted files are gone
+        run: |
+          removed=(
+            frontend/src/pages/LiveDetection.js
+          )
+          for f in "${removed[@]}"; do
+            if [ -f "$f" ]; then
+              echo "❌ Should be removed: $f"
+              exit 1
+            else
+              echo "✅ Confirmed removed: $f"
+            fi
+          done

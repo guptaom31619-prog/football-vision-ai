@@ -1,0 +1,11 @@
+venv/
+.venv/
+__pycache__/
+.ruff_cache/
+*.pyc
+.env
+dataset/
+test_data/
+heatmaps/
+outputs/
+*.zip

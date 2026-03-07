@@ -1,0 +1,45 @@
+{
+  "name": "football-vision-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "React frontend for the football player detection AI system",
+  "scripts": {
+    "dev:css": "tailwindcss -i src/tailwind.css -o src/index.css --watch",
+    "dev:react": "react-scripts start",
+    "start": "concurrently \"npm run dev:css\" \"npm run dev:react\"",
+    "prebuild": "tailwindcss -i src/tailwind.css -o src/index.css --minify && node -e \"const f='src/index.css',s=require('fs');s.writeFileSync(f,s.readFileSync(f,'utf8').replace(/calc\\\\(infinity \\\\* 1px\\\\)/g,'9999px'))\"",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "axios": "^1.13.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.3",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "concurrently": "^9.2.1"
+  }
+}

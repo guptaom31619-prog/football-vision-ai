@@ -1,0 +1,12 @@
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line too long — handled by formatter, not lint
+    "F401",  # unused imports — some modules expose symbols for api.py
+    "E402",  # module-level import not at top — needed for conditional imports
+    "F811",  # redefined unused — overloads / re-exports
+]
+
+exclude = ["venv", "__pycache__", "dataset"]
