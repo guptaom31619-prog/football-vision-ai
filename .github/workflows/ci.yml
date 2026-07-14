@@ -2,20 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master]
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ───────────────────────────────────────────────────────────────────────────
-  # Backend checks — syntax, lint, YAML validation
-  # ───────────────────────────────────────────────────────────────────────────
   backend:
-    name: Backend — Python checks
+    name: Backend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,29 +27,39 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
-      - name: Install lint dependencies
+      - name: Install lint tools
         run: pip install ruff pyyaml
 
-      - name: Python syntax check (all .py files)
+      - name: Python syntax check
         run: |
           for f in *.py; do
-            python -m py_compile "$f" && echo "  ✓ $f" || exit 1
+            python -m py_compile "$f"
+            echo "OK $f"
           done
 
       - name: Ruff lint
         run: ruff check .
 
       - name: Validate football.yaml
-        run: python -c "import yaml; yaml.safe_load(open('football.yaml'))"
+        run: python -c "import yaml; yaml.safe_load(open('football.yaml')); print('football.yaml OK')"
 
-      - name: Validate requirements.txt is parseable
-        run: pip install --dry-run -r requirements.txt 2>&1 | head -20 || true
+      - name: Validate requirements.txt
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          lines = [
+              line.strip()
+              for line in Path("requirements.txt").read_text().splitlines()
+              if line.strip() and not line.strip().startswith("#")
+          ]
+          assert lines, "requirements.txt has no packages"
+          print(f"{len(lines)} packages listed")
+          for line in lines:
+              print(f"  - {line}")
+          PY
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # Frontend checks — install, lint, build
-  # ───────────────────────────────────────────────────────────────────────────
   frontend:
-    name: Frontend — React checks
+    name: Frontend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -63,32 +70,34 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "20"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: ESLint check
-        run: npx eslint src/ --max-warnings=0 || true
+      - name: ESLint
+        run: npx eslint src/ --max-warnings=0
 
-      - name: Build check
+      - name: Production build
         run: CI=true npm run build
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # Structure check — ensure critical files exist
-  # ───────────────────────────────────────────────────────────────────────────
   structure:
-    name: Project structure check
+    name: Structure
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify critical files exist
+      - name: Verify critical files
         run: |
           files=(
+            README.md
+            LICENSE
+            Makefile
+            docker-compose.yml
+            .gitignore
             backend/api.py
             backend/detect.py
             backend/train.py
@@ -96,8 +105,11 @@ jobs:
             backend/team_classifier.py
             backend/stats_engine.py
             backend/heatmap.py
+            backend/download_dataset.py
+            backend/system_test.py
             backend/requirements.txt
             backend/football.yaml
+            backend/ruff.toml
             backend/.env.example
             backend/Dockerfile
             frontend/package.json
@@ -111,36 +123,18 @@ jobs:
             frontend/src/services/detectionApi.js
             frontend/Dockerfile
             frontend/nginx.conf
-            docker-compose.yml
-            Makefile
-            README.md
-            .gitignore
+            .github/workflows/ci.yml
           )
           missing=0
           for f in "${files[@]}"; do
             if [ ! -f "$f" ]; then
-              echo "❌ Missing: $f"
+              echo "MISSING: $f"
               missing=1
             else
-              echo "✅ Found:   $f"
+              echo "OK $f"
             fi
           done
-          if [ $missing -eq 1 ]; then
-            echo "::error::Critical files are missing from the repo."
+          if [ "$missing" -eq 1 ]; then
+            echo "::error::Critical files are missing"
             exit 1
           fi
-          echo "All critical files present."
-
-      - name: Verify deleted files are gone
-        run: |
-          removed=(
-            frontend/src/pages/LiveDetection.js
-          )
-          for f in "${removed[@]}"; do
-            if [ -f "$f" ]; then
-              echo "❌ Should be removed: $f"
-              exit 1
-            else
-              echo "✅ Confirmed removed: $f"
-            fi
-          done

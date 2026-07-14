@@ -17,7 +17,7 @@
 #   make docker-down   — stop Docker containers
 # =============================================================================
 
-SHELL        := /bin/zsh
+SHELL        := /bin/bash
 BACKEND_DIR  := backend
 FRONTEND_DIR := frontend
 VENV         := $(BACKEND_DIR)/venv

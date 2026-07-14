@@ -18,6 +18,7 @@ venv/
 .ruff_cache/
 .pytest_cache/
 .mypy_cache/
+*.pyc
 
 # ── YOLO / training artefacts ─────────────────────────────────────────────────
 runs/
