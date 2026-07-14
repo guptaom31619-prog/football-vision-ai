@@ -62,7 +62,7 @@ football-vision-ai/
 ### Requirements
 
 - Python **3.11+**
-- Node.js **20+**
+- Node.js **24+**
 - npm
 
 ### Install
